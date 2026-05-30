@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Open Julius - AI Data Analyst</title>
+  <link rel="stylesheet" href="/style.css" />
+  <!-- Markdown + syntax highlighting (loaded from CDN; app still works without) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css" />
+  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="brand">
+        <div class="logo">Σ</div>
+        <div>
+          <h1>Open Julius</h1>
+          <span class="tagline">AI Data Analyst</span>
+        </div>
+      </div>
+
+      <button id="new-chat" class="btn-secondary">+ New session</button>
+
+      <div class="upload-area" id="upload-area">
+        <input type="file" id="file-input" accept=".csv,.tsv,.xlsx,.xls,.json" hidden />
+        <div class="upload-inner">
+          <div class="upload-icon">⬆</div>
+          <p><strong>Drop a file</strong> or click</p>
+          <span class="hint">CSV, Excel, TSV, JSON</span>
+        </div>
+      </div>
+
+      <div class="datasets">
+        <h2>Datasets</h2>
+        <ul id="dataset-list">
+          <li class="empty">No data loaded yet.</li>
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <span id="model-badge" class="badge">model: ...</span>
+        <span id="key-badge" class="badge"></span>
+      </div>
+    </aside>
+
+    <!-- Main chat -->
+    <main id="main">
+      <div id="messages">
+        <div class="welcome" id="welcome">
+          <div class="welcome-logo">Σ</div>
+          <h2>Chat with your data</h2>
+          <p>Upload a CSV or Excel file, then ask anything in plain English.
+             I'll write &amp; run Python to analyze it and show you the charts.</p>
+          <div class="examples">
+            <button class="example">Summarize this dataset and its key stats</button>
+            <button class="example">Show the distribution of the main numeric columns</button>
+            <button class="example">What are the strongest correlations?</button>
+            <button class="example">Find trends or anomalies in the data</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="composer">
+        <div class="composer-inner">
+          <textarea id="prompt" rows="1"
+            placeholder="Ask a question about your data..."></textarea>
+          <button id="send" title="Send">➤</button>
+        </div>
+        <div class="composer-hint">Open Julius runs Python on your data via Gemini. Verify important results.</div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Data preview modal -->
+  <div id="preview-modal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="preview-title">Preview</h3>
+        <button id="preview-close">✕</button>
+      </div>
+      <div class="modal-body" id="preview-body"></div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
