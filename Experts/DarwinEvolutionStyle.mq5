@@ -125,10 +125,9 @@ void OnTick()
 //==================================================================
 int ConfluenceSignal()
   {
-   double upper[1], lower[1], mid[1];
+   double upper[1], lower[1];
    if(CopyBuffer(hBands, 1, 1, 1, upper) < 1) return 0; // upper
    if(CopyBuffer(hBands, 2, 1, 1, lower) < 1) return 0; // lower
-   if(CopyBuffer(hBands, 0, 1, 1, mid)   < 1) return 0; // base/mid
 
    double trend[1];
    if(CopyBuffer(hTrend, 0, 0, 1, trend) < 1) return 0;
@@ -259,13 +258,16 @@ int CountPositions()
 
 void CloseAll(string reason)
   {
+   int closed = 0;
    for(int i = PositionsTotal() - 1; i >= 0; i--)
      {
       ulong t = PositionGetTicket(i);
       if(t == 0) continue;
       if(!posinfo.SelectByTicket(t)) continue;
-      if(posinfo.Symbol() == _Symbol && posinfo.Magic() == InpMagic) trade.PositionClose(t);
+      if(posinfo.Symbol() == _Symbol && posinfo.Magic() == InpMagic)
+         if(trade.PositionClose(t)) closed++;
      }
+   if(closed > 0) PrintFormat("Closed %d positions | %s", closed, reason);
   }
 
 bool ManageDrawdown()
