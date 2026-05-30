@@ -17,6 +17,8 @@ Gemini drives the loop using a single tool, `run_python`, via function calling.
 """
 
 import os
+import re
+import time
 
 from google import genai
 from google.genai import types
@@ -26,6 +28,47 @@ from executor import execute_code
 
 MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 MAX_TURNS = int(os.getenv("MAX_AGENT_TURNS", "12"))
+
+# How many times to automatically retry when we hit the free-tier rate limit.
+MAX_RETRIES = int(os.getenv("MAX_RETRIES", "4"))
+
+
+def _retry_delay_seconds(err: Exception, attempt: int) -> float:
+    """Decide how long to wait before retrying a rate-limited request.
+
+    Gemini's 429 error usually suggests a delay like "retry in 22s"; honor it
+    when present, otherwise fall back to exponential backoff (2, 4, 8, ...).
+    """
+    text = str(err)
+    match = re.search(r"retry(?:Delay)?['\":\s]*(?:in\s+)?(\d+(?:\.\d+)?)\s*s", text)
+    if match:
+        return min(float(match.group(1)) + 1.0, 60.0)
+    return min(2 ** attempt, 30.0)
+
+
+def _is_rate_limit(err: Exception) -> bool:
+    text = str(err)
+    return "429" in text or "RESOURCE_EXHAUSTED" in text
+
+
+def _generate_with_retry(client, contents, config):
+    """Call generate_content, automatically waiting out free-tier 429 limits."""
+    last_err = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            return client.models.generate_content(
+                model=MODEL, contents=contents, config=config
+            )
+        except Exception as err:  # noqa: BLE001
+            last_err = err
+            if _is_rate_limit(err) and attempt < MAX_RETRIES:
+                wait = _retry_delay_seconds(err, attempt)
+                print(f"[Open Julius] Rate limited; retrying in {wait:.0f}s "
+                      f"(attempt {attempt}/{MAX_RETRIES})...")
+                time.sleep(wait)
+                continue
+            raise
+    raise last_err
 
 
 SYSTEM_PROMPT = """You are Open Julius, an expert AI data analyst. \
@@ -162,11 +205,7 @@ def run_agent(client, contents, namespace, dataset_context):
     final_text = ""
 
     for _ in range(MAX_TURNS):
-        response = client.models.generate_content(
-            model=MODEL,
-            contents=contents,
-            config=config,
-        )
+        response = _generate_with_retry(client, contents, config)
 
         if not response.candidates:
             final_text = final_text or "I couldn't generate a response. Please try again."

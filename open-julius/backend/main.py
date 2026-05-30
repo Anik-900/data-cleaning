@@ -153,6 +153,18 @@ def chat(req: ChatRequest):
         )
     except Exception as exc:
         traceback.print_exc()
+        text = str(exc)
+        # Friendly message for the free-tier rate limit (HTTP 429).
+        if "429" in text or "RESOURCE_EXHAUSTED" in text:
+            raise HTTPException(
+                status_code=429,
+                detail=(
+                    "Gemini free-tier rate limit reached (only a few requests "
+                    "per minute are allowed). Please wait ~30 seconds and try "
+                    "again. Tip: you can also switch GEMINI_MODEL in your .env "
+                    "or enable billing for higher limits."
+                ),
+            )
         raise HTTPException(status_code=500, detail=f"Agent error: {exc}")
 
     return result
