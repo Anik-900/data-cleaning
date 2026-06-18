@@ -265,13 +265,16 @@ int CountPositions()
 
 void CloseAll(string reason)
   {
+   int closed = 0;
    for(int i = PositionsTotal() - 1; i >= 0; i--)
      {
       ulong t = PositionGetTicket(i);
       if(t == 0) continue;
       if(!posinfo.SelectByTicket(t)) continue;
-      if(posinfo.Symbol() == _Symbol && posinfo.Magic() == InpMagic) trade.PositionClose(t);
+      if(posinfo.Symbol() == _Symbol && posinfo.Magic() == InpMagic)
+         if(trade.PositionClose(t)) closed++;
      }
+   if(closed > 0) PrintFormat("Closed %d positions | %s", closed, reason);
   }
 
 bool ManageDrawdown()

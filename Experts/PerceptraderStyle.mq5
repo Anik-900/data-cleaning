@@ -124,16 +124,16 @@ void OnTick()
 //==================================================================
 double Perceptron()
   {
-   double rsi[1], fast[2], slow[1], mom[1], cci[1];
+   double rsi[1], fast[1], slow[1], mom[1], cci[1];
    if(CopyBuffer(hRsi, 0, 1, 1, rsi)  < 1) return 0;
-   if(CopyBuffer(hFast,0, 1, 2, fast) < 2) return 0;
+   if(CopyBuffer(hFast,0, 1, 1, fast) < 1) return 0;
    if(CopyBuffer(hSlow,0, 1, 1, slow) < 1) return 0;
    if(CopyBuffer(hMom, 0, 1, 1, mom)  < 1) return 0;
    if(CopyBuffer(hCci, 0, 1, 1, cci)  < 1) return 0;
 
    // Normalize each input roughly into [-1, +1]
    double xRsi   = (50.0 - rsi[0]) / 50.0;                 // oversold(+) / overbought(-)
-   double xTrend = (fast[1] - slow[0]) / (slow[0] * 0.01); // EMA spread in % units
+   double xTrend = (fast[0] - slow[0]) / (slow[0] * 0.01); // EMA spread in % units
    xTrend = MathMax(-1.0, MathMin(1.0, xTrend));
    double xMom   = (mom[0] - 100.0) / 1.0;                 // momentum around 100
    xMom = MathMax(-1.0, MathMin(1.0, xMom));
